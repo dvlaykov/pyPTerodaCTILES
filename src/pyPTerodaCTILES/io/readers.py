@@ -13,7 +13,7 @@ import xarray as xr
 from numpy import array as np_array
 from numpy import ceil
 from numpy import empty as np_empty
-from numpy import loadtxt as np_loadxt
+from numpy import loadtxt as np_loadtxt
 from numpy import ndarray
 
 
