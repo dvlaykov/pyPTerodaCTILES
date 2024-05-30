@@ -149,6 +149,15 @@ def parser():
                                 default is 1000""",
     )
 
+    parser.add_argument(
+            "-d",
+            "--diagnostics",
+            type=str,
+            nargs='*',
+            default=['all'],
+            help="""choose diagnostics to convert""",
+            choices = ['all', 'global', 'column', 'xy_slice', 'xz_slice']
+            )
     return parser.parse_args()
 
 
@@ -158,44 +167,53 @@ def main():
     print("\nInput parameters:")
     print(f"data_source : {args.data_source}")
     print(f"runid: {args.runid}")
+    print(f"diagnostics: {args.diagnostics}")
     print(f"output_path : {args.output_path}")
     print(f"slice_batch_size : {args.slice_batch_size}")
     print("")
 
     # parse runid into string with expected formatting
     runid = f"run{int(args.runid):06d}"
+
+    diagnostics = args.diagnostics
+    if 'all' in diagnostics:
+        diagnostics =  ['global', 'column', 'xy_slice', 'xz_slice']
+
     # make sure the output path exists
     args.output_path.mkdir(parents=True, exist_ok=True)
 
     # Global diagnostics : collect in one file, may have missing components
-    global_converter(
-        data_source=args.data_source,
-        output_path=args.output_path / f"{runid}globaldiags.nc",
-    )
-    print("")
+    if 'global' in diagnostics:
+        global_converter(
+            data_source=args.data_source,
+            output_path=args.output_path / f"{runid}globaldiags.nc",
+        )
+        print("")
 
     # column diagnostics
-    local_converter(
-        data_source=args.data_source,
-        glob_pattern=f"{runid}columndiags*",
-        reader=ColumnDiags(),
-        output_path=args.output_path / f"{runid}columndiags.nc",
-        batch_size=None,
-        mode="fast",
-    )
-    print("")
+    if 'column' in diagnostics:
+        local_converter(
+            data_source=args.data_source,
+            glob_pattern=f"{runid}columndiags*",
+            reader=ColumnDiags(),
+            output_path=args.output_path / f"{runid}columndiags.nc",
+            batch_size=None,
+            mode="fast",
+        )
+        print("")
 
     # slice diagnostics
     for slice in ["xy", "xz"]:
-        local_converter(
-            data_source=args.data_source,
-            glob_pattern=f"{runid}_{slice}_diags*",
-            reader=SliceDiags(slice),
-            output_path=args.output_path / f"{runid}_{slice}_diag.nc",
-            batch_size=args.slice_batch_size,
-            mode="cheap",
-        )
-    print("")
+        if f"{slice}_slice" in diagnostics:
+            local_converter(
+                data_source=args.data_source,
+                glob_pattern=f"{runid}_{slice}_diags*",
+                reader=SliceDiags(slice),
+                output_path=args.output_path / f"{runid}_{slice}_diag.nc",
+                batch_size=args.slice_batch_size,
+                mode="cheap",
+            )
+            print(f"S")
 
 
 if __name__ == "__main__":
