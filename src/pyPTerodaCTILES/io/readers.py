@@ -388,8 +388,8 @@ class SliceDiags(PTerodaCTILES_FileFormat):
         idx += n2w
         coords[f"{slice_type[1]}_p"] = array_seq[idx : idx + n2p]
         idx += n2p
-        level_dim = "xyz".strip(slice_type)
-        coords[f"levels_{level_dim}"] = array_seq[idx : idx + nlev]
+        level_dim = f"levels_{'xyz'.strip(slice_type)}"
+        coords[level_dim] = array_seq[idx : idx + nlev]
         idx += nlev
 
         # print ('coords', coords.keys())
