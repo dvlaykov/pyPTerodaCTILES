@@ -441,7 +441,7 @@ class SliceDiags(PTerodaCTILES_FileFormat):
             dims = self._slice_dims_(slice_type, f)
             # Cloud top height has a single level
             if f == "ctop":
-                data_vars[f] = array_seq[idx : idx + n1 * n2p].reshape(n1, n2p)
+                data_vars[f] = array_seq[idx : idx + n1 * n2p].reshape(n2p, n1).T
                 idx += field_sizep
             # ntracerp tracers on nlev levels
             elif f == "trcp":
@@ -449,9 +449,9 @@ class SliceDiags(PTerodaCTILES_FileFormat):
                 dims += [level_dim, "ptracer"]
                 for itracer in range(ntracerp):
                     for ilev in range(nlev):
-                        data_vars[f][:, :, ilev, itracer] = array_seq[
-                            idx : idx + n1 * n2p
-                        ].reshape(n1, n2p)
+                        data_vars[f][:, :, ilev, itracer] = (
+                            array_seq[idx : idx + n1 * n2p].reshape(n2p, n1).T
+                        )
                         idx += field_sizep
             # ntracerp tracers on nlev levels
             elif f == "trcw":
@@ -459,17 +459,17 @@ class SliceDiags(PTerodaCTILES_FileFormat):
                 dims += [level_dim, "wtracer"]
                 for itracer in range(ntracerw):
                     for ilev in range(nlev):
-                        data_vars[f][:, :, ilev, itracer] = array_seq[
-                            idx : idx + n1 * n2w
-                        ].reshape(n1, n2w)
+                        data_vars[f][:, :, ilev, itracer] = (
+                            array_seq[idx : idx + n1 * n2w].reshape(n2w, n1).T
+                        )
                         idx += field_sizew
             # one field on nlev levels on p-grid
             elif i in ["u", "v", "p", "rho", "diis"]:
                 data_vars[f] = np_empty([n1, n2p, nlev])
                 dims += [level_dim]
                 for ilev in range(nlev):
-                    data_vars[f][:, :, ilev] = array_seq[idx : idx + n1 * n2p].reshape(
-                        n1, n2p
+                    data_vars[f][:, :, ilev] = (
+                        array_seq[idx : idx + n1 * n2p].reshape(n2p, n1).T
                     )
                     idx += field_sizep
             # one field on nlev levels on w-grid
@@ -477,8 +477,8 @@ class SliceDiags(PTerodaCTILES_FileFormat):
                 data_vars[f] = np_empty([n1, n2w, nlev])
                 dims += [level_dim]
                 for ilev in range(nlev):
-                    data_vars[f][:, :, ilev] = array_seq[idx : idx + n1 * n2w].reshape(
-                        n1, n2w
+                    data_vars[f][:, :, ilev] = (
+                        array_seq[idx : idx + n1 * n2w].reshape(n2w, n1).T
                     )
                     idx += field_sizew
             # convert array into xarray
