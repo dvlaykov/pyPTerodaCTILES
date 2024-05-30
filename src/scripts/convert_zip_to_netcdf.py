@@ -27,7 +27,7 @@ def global_converter(data_source: Path, output_path: Path) -> None:
         "ICplevels": ICPLevels(),
         "ICwlevels": ICWLevels(),
         "globaldiags": GlobalDiags(),
-        "tabilitydiags": StabilityDiags(),
+        "stabilitydiags": StabilityDiags(),
         "solver_convergence": ConvergenceyDiags(),
     }
     print(f"{output_path.name}: Will convert IC and global diagnostics files")
