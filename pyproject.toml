@@ -9,7 +9,9 @@ description = "Python tools for PTerodaCTILES fluid code"
 authors = [
     {name = "Dimtar Vlaykov", email = "d.vlaykov@exeter.ac.uk"},
 ]
-#urls = {homepage = "https://bitbucket.org/glt/pymusic/"}
+
+urls = {homepage = "https:github.com/dvlaykov/pyPTerodaCTILES"}
+
 classifiers = [
     "Development Status :: 2 - Pre-Alpha",
     "Intended Audience :: Science/Research",
