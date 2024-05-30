@@ -1,4 +1,4 @@
-# Python tools and itilities for the PTerodaCTILES fluids code
+# Python tools and utilities for the PTerodaCTILES fluids code
 
 ## Install
 Can install as a python package with 
