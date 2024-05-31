@@ -90,7 +90,6 @@ def local_converter(
         with np_load(data_source) as zipfile:
             # get filenames
             input = sorted([x for x in zipfile if glob_pattern.strip("*") in x])[tindex_slice]
-            print (tindex_slice, len(input))
             if mode == "fast":
                 # load all data
                 input = [zipfile[x] for x in input]
@@ -190,9 +189,9 @@ def main():
     print("\nInput parameters:")
     print(f"data_source : {args.data_source}")
     print(f"runid: {args.runid}")
+    print(f"time_slice: slice({args.tinit}:{args.tend}:{args.tstride})")
     print(f"diagnostics: {args.diagnostics}")
     print(f"output_path : {args.output_path}")
-    print(f"time_slice: slice({args.tinit}:{args.tend}:{args.tstride})")
     print(f"slice_batch_size : {args.slice_batch_size}")
     print("")
 
