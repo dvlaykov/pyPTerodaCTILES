@@ -68,6 +68,7 @@ def local_converter(
     glob_pattern: str,
     reader: PTerodaCTILES_FileFormat,
     output_path: Path,
+    tindex_slice: slice = slice(None),
     batch_size: int = 500,
     mode: str = ["light"],
 ) -> None:
@@ -75,20 +76,22 @@ def local_converter(
     'cheap' mode loads files in memory batch by batch
     'fast' mode loads all files in memory at once
     """
+
     # data source is a directory
     if data_source.is_dir():
         batch_converter(
             file_reader=reader,
-            input_files=sorted(data_source.glob(glob_pattern)),
+            input_files=sorted(data_source.glob(glob_pattern))[tindex_slice],
             output_file_name=output_path,
             batch_size=batch_size,
         )
     # data source is a zip file  -- faster !!!
     elif data_source.suffix == ".zip":
         with np_load(data_source) as zipfile:
+            # get filenames
+            input = sorted([x for x in zipfile if glob_pattern.strip("*") in x])[tindex_slice]
+            print (tindex_slice, len(input))
             if mode == "fast":
-                # get filenames
-                input = sorted([x for x in zipfile if glob_pattern.strip("*") in x])
                 # load all data
                 input = [zipfile[x] for x in input]
                 batch_converter(
@@ -98,8 +101,6 @@ def local_converter(
                     batch_size=None,
                 )
             elif mode == "cheap":
-                # get filenames
-                input = sorted([x for x in zipfile if glob_pattern.strip("*") in x])
                 batch_converter_zip(
                     file_reader=reader,
                     zip_master=data_source,
@@ -158,8 +159,30 @@ def parser():
             help="""choose diagnostics to convert""",
             choices = ['all', 'global', 'column', 'xy_slice', 'xz_slice']
             )
-    return parser.parse_args()
 
+    parser.add_argument(
+            "--tinit",
+            type=int,
+            default= None,
+            help="""initial time index, default to first available""",
+            )
+
+    parser.add_argument(
+            "--tend",
+            type=int,
+            default= None,
+            help="""glob pattern to select d), default to last available
+                    only relevant for column and slice diagnostics
+            """,
+            )
+
+    parser.add_argument(
+            "--tstride",
+            type=int,
+            default = 1,
+            help="step between time indices to include, default to 1",
+            )
+    return parser.parse_args()
 
 def main():
     # parse command line parameters
@@ -169,6 +192,7 @@ def main():
     print(f"runid: {args.runid}")
     print(f"diagnostics: {args.diagnostics}")
     print(f"output_path : {args.output_path}")
+    print(f"time_slice: slice({args.tinit}:{args.tend}:{args.tstride})")
     print(f"slice_batch_size : {args.slice_batch_size}")
     print("")
 
@@ -197,19 +221,21 @@ def main():
             glob_pattern=f"{runid}columndiags*",
             reader=ColumnDiags(),
             output_path=args.output_path / f"{runid}columndiags.nc",
+            tindex_slice = slice(args.tinit, args.tend, args.tstride),
             batch_size=None,
             mode="fast",
         )
         print("")
 
     # slice diagnostics
-    for slice in ["xy", "xz"]:
-        if f"{slice}_slice" in diagnostics:
+    for slice_ax in ["xy", "xz"]:
+        if f"{slice_ax}_slice" in diagnostics:
             local_converter(
                 data_source=args.data_source,
-                glob_pattern=f"{runid}_{slice}_diags*",
-                reader=SliceDiags(slice),
-                output_path=args.output_path / f"{runid}_{slice}_diag.nc",
+                glob_pattern=f"{runid}_{slice_ax}_diags*",
+                reader=SliceDiags(slice_ax),
+                output_path=args.output_path / f"{runid}_{slice_ax}_diag.nc",
+                tindex_slice = slice(args.tinit, args.tend, args.tstride),
                 batch_size=args.slice_batch_size,
                 mode="cheap",
             )
