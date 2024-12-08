@@ -31,4 +31,4 @@ namespace=false
 #exclude = "scripts"
 
 [project.scripts]
-convert_pterodactiles_dat_to_netcdf = "scripts.convert_zip_to_netcdf:main"
+convert_pterodactiles_dat_to_netcdf = "scripts.convert_to_netcdf:main"

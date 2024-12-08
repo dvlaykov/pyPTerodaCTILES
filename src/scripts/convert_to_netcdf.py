@@ -1,11 +1,11 @@
 # Script to convert zipped data files to netcdf
-from argparse import ArgumentParser
+from argparse import ArgumentDefaultsHelpFormatter, ArgumentParser
+
 from pathlib import Path
 from time import time
 
 import xarray as xr
 from numpy import load as np_load
-
 from pyPTerodaCTILES.io.batch_converter import batch_converter, batch_converter_zip
 from pyPTerodaCTILES.io.readers import (
     ColumnDiags,
@@ -89,7 +89,9 @@ def local_converter(
     elif data_source.suffix == ".zip":
         with np_load(data_source) as zipfile:
             # get filenames
-            input = sorted([x for x in zipfile if glob_pattern.strip("*") in x])[tindex_slice]
+            input = sorted([x for x in zipfile if glob_pattern.strip("*") in x])[
+                tindex_slice
+            ]
             if mode == "fast":
                 # load all data
                 input = [zipfile[x] for x in input]
@@ -119,7 +121,8 @@ def local_converter(
 
 def parser():
     parser = ArgumentParser(
-        description="Convert zipped PTerodaCTILES files into a collection of NetCDF files"
+        description="Convert PTerodaCTILESv0.3 files into a collection of NetCDF files",
+        formatter_class=ArgumentDefaultsHelpFormatter
     )
     parser.add_argument(
         "data_source",
@@ -136,7 +139,7 @@ def parser():
         default=1,
         help="""run id to match against the filenames;
                               relevant for slice, columns, global and stability;
-                              default is 1""",
+                              """,
     )
 
     parser.add_argument(
@@ -146,42 +149,43 @@ def parser():
         help="""how many slice files to process at once;
                                 will create a temporary .nc file for each batch before combining them,
                                 larger batch puts more pressure on memory but is faster;
-                                default is 1000""",
+                                """,
     )
 
     parser.add_argument(
-            "-d",
-            "--diagnostics",
-            type=str,
-            nargs='*',
-            default=['all'],
-            help="""choose diagnostics to convert""",
-            choices = ['all', 'global', 'column', 'xy_slice', 'xz_slice']
-            )
+        "-d",
+        "--diagnostics",
+        type=str,
+        nargs="*",
+        default=["all"],
+        help="""choose diagnostics to convert""",
+        choices=["all", "global", "column", "xy_slice", "xz_slice"],
+    )
 
     parser.add_argument(
-            "--tinit",
-            type=int,
-            default= None,
-            help="""initial time index, default to first available""",
-            )
+        "--tinit",
+        type=int,
+        default=None,
+        help="""initial time index, default to first available""",
+    )
 
     parser.add_argument(
-            "--tend",
-            type=int,
-            default= None,
-            help="""glob pattern to select d), default to last available
+        "--tend",
+        type=int,
+        default=None,
+        help="""glob pattern to select d), default to last available
                     only relevant for column and slice diagnostics
             """,
-            )
+    )
 
     parser.add_argument(
-            "--tstride",
-            type=int,
-            default = 1,
-            help="step between time indices to include, default to 1",
-            )
+        "--tstride",
+        type=int,
+        default=1,
+        help="step between time indices to include, default to 1",
+    )
     return parser.parse_args()
+
 
 def main():
     # parse command line parameters
@@ -199,14 +203,14 @@ def main():
     runid = f"run{int(args.runid):06d}"
 
     diagnostics = args.diagnostics
-    if 'all' in diagnostics:
-        diagnostics =  ['global', 'column', 'xy_slice', 'xz_slice']
+    if "all" in diagnostics:
+        diagnostics = ["global", "column", "xy_slice", "xz_slice"]
 
     # make sure the output path exists
     args.output_path.mkdir(parents=True, exist_ok=True)
 
     # Global diagnostics : collect in one file, may have missing components
-    if 'global' in diagnostics:
+    if "global" in diagnostics:
         global_converter(
             data_source=args.data_source,
             output_path=args.output_path / f"{runid}globaldiags.nc",
@@ -214,13 +218,13 @@ def main():
         print("")
 
     # column diagnostics
-    if 'column' in diagnostics:
+    if "column" in diagnostics:
         local_converter(
             data_source=args.data_source,
             glob_pattern=f"{runid}columndiags*",
             reader=ColumnDiags(),
             output_path=args.output_path / f"{runid}columndiags.nc",
-            tindex_slice = slice(args.tinit, args.tend, args.tstride),
+            tindex_slice=slice(args.tinit, args.tend, args.tstride),
             batch_size=None,
             mode="fast",
         )
@@ -234,7 +238,7 @@ def main():
                 glob_pattern=f"{runid}_{slice_ax}_diags*",
                 reader=SliceDiags(slice_ax),
                 output_path=args.output_path / f"{runid}_{slice_ax}_diag.nc",
-                tindex_slice = slice(args.tinit, args.tend, args.tstride),
+                tindex_slice=slice(args.tinit, args.tend, args.tstride),
                 batch_size=args.slice_batch_size,
                 mode="cheap",
             )
