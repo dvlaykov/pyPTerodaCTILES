@@ -1,6 +1,5 @@
 # Script to convert zipped data files to netcdf
 from argparse import ArgumentDefaultsHelpFormatter, ArgumentParser
-
 from pathlib import Path
 from time import time
 
@@ -20,7 +19,7 @@ from pyPTerodaCTILES.io.readers import (
 
 
 def global_converter(data_source: Path, output_path: Path) -> None:
-    """convert global files around batch converter dependent on zip vs directory source"""
+    """convert global files; wrapper around batch converter dependent on zip vs directory source"""
 
     # Global diagnostics : collect in one file, may have missing components
     glob_readers = {
@@ -52,10 +51,11 @@ def global_converter(data_source: Path, output_path: Path) -> None:
                 except IndexError:
                     print(f"Skipping missing {pattern} input")
 
-    ic_xds = [glob_xds.pop("ICplevels"), glob_xds.pop("ICwlevels")]
-    xr.merge(ic_xds).to_netcdf(
-        output_path, engine="h5netcdf", mode="w", group="IC", compute=True
-    )
+    ic_xds = [glob_xds.pop(k) for k in ("ICplevels", "ICwlevels") if k in glob_xds]
+    if ic_xds:
+        xr.merge(ic_xds).to_netcdf(
+            output_path, engine="h5netcdf", mode="w", group="IC", compute=True
+        )
     for group, xds in glob_xds.items():
         xds.to_netcdf(
             output_path, engine="h5netcdf", mode="a", group=group, compute=True
@@ -64,13 +64,13 @@ def global_converter(data_source: Path, output_path: Path) -> None:
 
 
 def local_converter(
-    data_source: [Path],
+    data_source: Path,
     glob_pattern: str,
     reader: PTerodaCTILES_FileFormat,
     output_path: Path,
     tindex_slice: slice = slice(None),
     batch_size: int = 500,
-    mode: str = ["light"],
+    mode: str = "cheap",
 ) -> None:
     """wrapper around batch converter dependent on zip vs directory source
     'cheap' mode loads files in memory batch by batch
@@ -122,7 +122,7 @@ def local_converter(
 def parser():
     parser = ArgumentParser(
         description="Convert PTerodaCTILESv0.3 files into a collection of NetCDF files",
-        formatter_class=ArgumentDefaultsHelpFormatter
+        formatter_class=ArgumentDefaultsHelpFormatter,
     )
     parser.add_argument(
         "data_source",
@@ -138,8 +138,8 @@ def parser():
         type=int,
         default=1,
         help="""run id to match against the filenames;
-                              relevant for slice, columns, global and stability;
-                              """,
+                relevant for slice, columns, global and stability;
+                """,
     )
 
     parser.add_argument(
@@ -147,9 +147,9 @@ def parser():
         type=int,
         default=1000,
         help="""how many slice files to process at once;
-                                will create a temporary .nc file for each batch before combining them,
-                                larger batch puts more pressure on memory but is faster;
-                                """,
+                will create a temporary .nc file for each batch before combining them,
+                larger batch puts more pressure on memory but is faster;
+                """,
     )
 
     parser.add_argument(
@@ -173,8 +173,8 @@ def parser():
         "--tend",
         type=int,
         default=None,
-        help="""glob pattern to select d), default to last available
-                    only relevant for column and slice diagnostics
+        help="""final time index, default to last available;
+                only relevant for column and slice diagnostics
             """,
     )
 
@@ -182,7 +182,7 @@ def parser():
         "--tstride",
         type=int,
         default=1,
-        help="step between time indices to include, default to 1",
+        help="number of steps between time indices to process",
     )
     return parser.parse_args()
 
@@ -242,7 +242,7 @@ def main():
                 batch_size=args.slice_batch_size,
                 mode="cheap",
             )
-            print(f"S")
+            print("S")
 
 
 if __name__ == "__main__":
