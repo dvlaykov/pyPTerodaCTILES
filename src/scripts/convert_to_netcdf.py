@@ -37,7 +37,7 @@ def global_converter(data_source: Path, output_path: Path) -> None:
     if data_source.is_dir():
         for pattern in glob_readers:
             try:
-                glob_xds[group] = glob_readers[pattern].load(
+                glob_xds[pattern] = glob_readers[pattern].load(
                     list(data_source.glob(pattern))[0]
                 )
             except IndexError:
