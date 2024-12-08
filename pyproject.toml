@@ -1,10 +1,10 @@
 [build-system]
-requires = ["setuptools>=61", "numpy>=1.21", "xarray>=2023.11"]
+requires = ["setuptools>=61", "setuptools_scm>=8"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "pyPTerodaCTILES"
-version = "1.0.0"
+dynamic = ["version"]
 description = "Python tools for PTerodaCTILES fluid code"
 authors = [
     {name = "Dimtar Vlaykov", email = "d.vlaykov@exeter.ac.uk"},
@@ -19,16 +19,23 @@ classifiers = [
     "Programming Language :: Python :: 3.11"
 ]
 
-requires-python = ">=3.8"
+requires-python = ">=3.11"
 dependencies = [
-    "numpy>=1.21",
     "matplotlib>=3.6",
-    "xarray>=2023.11",
-    "dask>=2023.11.0"
+    "xarray[io,accel,parallel]>=2023.9",
+    "f90nml",
+    "numpy>=1.21"
 ]
-[tools.setuptools.package.find]
-namespace=false
-#exclude = "scripts"
+
+[project.optional-dependencies]
+dev = [
+    "tox",
+    "mypy",
+    "pytest",
+    "ruff"
+]
+
+[tool.setuptools_scm]
 
 [project.scripts]
 convert_pterodactiles_dat_to_netcdf = "scripts.convert_to_netcdf:main"
