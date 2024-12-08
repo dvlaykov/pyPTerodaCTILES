@@ -1,6 +1,6 @@
 # readers for parsing diagnostic output files for PTerodaCTILES_v0p3
 
-from abc import ABC, abstractmethod
+from abc import abstractmethod
 from collections.abc import Iterable
 from dataclasses import dataclass
 from io import StringIO  # StringIO behaves like a file object -- for zipped dirs
@@ -11,14 +11,14 @@ from typing import ClassVar, Union
 
 import xarray as xr
 from numpy import array as np_array
-from numpy import ceil
+from numpy import ceil, ndarray
 from numpy import empty as np_empty
 from numpy import loadtxt as np_loadtxt
-from numpy import ndarray
 
 
 # PTerodaCTILES output file name formatss
 def diagnostics_filename(runid: int, type: str, time: Union[int, None] = None) -> str:
+    """compose filename according to formatting templates"""
     if type in ["ICplevels", "ICwlevels", "solver_convergence"]:
         return f"{type}.dat"
     elif type in ["globaldiags", "stabilitydiags"]:
@@ -278,20 +278,21 @@ class ColumnDiags(PTerodaCTILES_FileFormat):
                 idx += nz + 1
         dims = {"time", "zp", "zw"}
         # upgrade fields to data arrays
+        xarr_vars = {}
         for d in self._vars_:
             if d not in dims:
                 if d in self._short_vars_:
-                    data_vars[d] = xr.DataArray(
+                    xarr_vars[d] = xr.DataArray(
                         data_vars[d][None, :], dims=["time", "zp"]
                     )
                 else:
-                    data_vars[d] = xr.DataArray(
+                    xarr_vars[d] = xr.DataArray(
                         data_vars[d][None, :], dims=["time", "zw"]
                     )
 
         return xr.Dataset(
-            data_vars={d: data_vars[d] for d in data_vars if d not in dims},
-            coords={d: data_vars[d] for d in dims},
+            data_vars={d: xarr_vars[d] for d in xarr_vars if d not in dims},
+            coords={d: xarr_vars[d] for d in dims},
         )
 
 
@@ -441,47 +442,47 @@ class SliceDiags(PTerodaCTILES_FileFormat):
             dims = self._slice_dims_(slice_type, f)
             # Cloud top height has a single level
             if f == "ctop":
-                data_vars[f] = array_seq[idx : idx + n1 * n2p].reshape(n2p, n1).T
+                data = array_seq[idx : idx + n1 * n2p].reshape(n2p, n1).T
                 idx += field_sizep
             # ntracerp tracers on nlev levels
             elif f == "trcp":
-                data_vars[f] = np_empty([n1, n2p, nlev, ntracerp])
+                data = np_empty([n1, n2p, nlev, ntracerp])
                 dims += [level_dim, "ptracer"]
                 for itracer in range(ntracerp):
                     for ilev in range(nlev):
-                        data_vars[f][:, :, ilev, itracer] = (
+                        data[:, :, ilev, itracer] = (
                             array_seq[idx : idx + n1 * n2p].reshape(n2p, n1).T
                         )
                         idx += field_sizep
             # ntracerp tracers on nlev levels
             elif f == "trcw":
-                data_vars[f] = np_empty([n1, n2w, nlev, ntracerw])
+                data = np_empty([n1, n2w, nlev, ntracerw])
                 dims += [level_dim, "wtracer"]
                 for itracer in range(ntracerw):
                     for ilev in range(nlev):
-                        data_vars[f][:, :, ilev, itracer] = (
+                        data[:, :, ilev, itracer] = (
                             array_seq[idx : idx + n1 * n2w].reshape(n2w, n1).T
                         )
                         idx += field_sizew
             # one field on nlev levels on p-grid
             elif i in ["u", "v", "p", "rho", "diis"]:
-                data_vars[f] = np_empty([n1, n2p, nlev])
+                data = np_empty([n1, n2p, nlev])
                 dims += [level_dim]
                 for ilev in range(nlev):
-                    data_vars[f][:, :, ilev] = (
+                    data[:, :, ilev] = (
                         array_seq[idx : idx + n1 * n2p].reshape(n2p, n1).T
                     )
                     idx += field_sizep
             # one field on nlev levels on w-grid
             else:
-                data_vars[f] = np_empty([n1, n2w, nlev])
+                data = np_empty([n1, n2w, nlev])
                 dims += [level_dim]
                 for ilev in range(nlev):
-                    data_vars[f][:, :, ilev] = (
+                    data[:, :, ilev] = (
                         array_seq[idx : idx + n1 * n2w].reshape(n2w, n1).T
                     )
                     idx += field_sizew
             # convert array into xarray
-            data_vars[f] = xr.DataArray(data_vars[f][None, ...], dims=["time"] + dims)
+            data_vars[f] = xr.DataArray(data[None, ...], dims=["time"] + dims)
 
         return xr.Dataset(data_vars, coords)

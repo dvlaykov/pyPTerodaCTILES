@@ -1,6 +1,7 @@
 from collections.abc import Iterable
 from pathlib import Path
 from time import time
+from typing import Union
 
 import xarray as xr
 from dask.diagnostics import ProgressBar
@@ -11,8 +12,8 @@ from .readers import PTerodaCTILES_FileFormat
 
 def batch_converter(
     file_reader: PTerodaCTILES_FileFormat,
-    input_files: Iterable[Path, str, bytes],
-    output_file_name: [Path, str],
+    input_files: list[Path | str | bytes],
+    output_file_name: Union[Path, str],
     batch_size: int = 1000,
 ) -> None:
     t0 = time()
@@ -58,9 +59,9 @@ def batch_converter(
 
 def batch_converter_zip(
     file_reader: PTerodaCTILES_FileFormat,
-    zip_master: Iterable[Path, str],
-    input_files: Iterable[Path, str, bytes],
-    output_file_name: [Path, str],
+    zip_master: Union[Path | str],
+    input_files: list[Path | str | bytes],
+    output_file_name: Union[Path, str],
     batch_size: int = 1000,
 ) -> None:
     t0 = time()
