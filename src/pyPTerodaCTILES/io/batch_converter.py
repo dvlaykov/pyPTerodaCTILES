@@ -48,7 +48,7 @@ def batch_converter(
         batch_files[0].rename(out_path)
     else:
         with ProgressBar():
-            batch_xds = xr.open_mfdataset(batch_files, parallel=True)
+            batch_xds = xr.open_mfdataset(batch_files, chunks={})
             batch_xds.to_netcdf(out_path, mode="w", compute=True)
             batch_xds.close()
         # remove batch files
