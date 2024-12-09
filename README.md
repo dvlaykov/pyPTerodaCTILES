@@ -6,10 +6,12 @@ Can install as a python package with
  * download the repository
  * run (preferably within a virtual environment)
    ```pip install --editable <location-of-repository>[dev]```
-   It should all install any missing dependencies as well.
+   This should install any missing dependencies as well.
 The package is in a development stage, hence the editable install.
+
+
 ## Contains
- * Python IO readers for the ```.dat``` diagnostic files produced by PTerodaCTILES. Expose them by importing ```pyPTerodaCTILES.io.readers``` . The output is in self-descriptive xarray datasets.
- * Python conversion tools to convert data to NetCDF format, e.g. a command line tool `convert_pterodactiles_dat_to_netcdf` is exposed on installation.
+ * Python IO readers for the ```.dat``` diagnostic files produced by PTerodaCTILESv0.3. Expose them by importing ```pyPTerodaCTILES.IO.readers``` . The output is in self-descriptive xarray datasets.
+ * Python conversion CLI to convert them to NetCDF format, e.g. a command line tool `convert_pterodactiles_dat_to_netcdf` is exposed on installation.
 
 
